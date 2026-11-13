@@ -11,3 +11,54 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum Priority {
+  BAIXA
+  MEDIA
+  ALTA
+
+  @@map("priority_enum")
+}
+
+enum Status {
+  ABERTA
+  EM_ANDAMENTO
+  CONCLUIDA
+
+  @@map("status_enum")
+}
+
+model Request {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(200)
+  description String
+  priority    Priority
+  status      Status   @default(ABERTA)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  categories RequestCategory[]
+
+  @@map("requests")
+}
+
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String @unique @db.VarChar(50)
+
+  requests RequestCategory[]
+
+  @@map("categories")
+}
+
+model RequestCategory {
+  requestId  Int @map("request_id")
+  categoryId Int @map("category_id")
+
+  request  Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@id([categoryId, requestId])
+  @@index([requestId])
+  @@map("request_categories")
+}
